@@ -1,5 +1,6 @@
 package com.example.aula11.controller;
 
+import com.example.aula11.controller.dto.LoginRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -7,6 +8,7 @@ import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
@@ -21,22 +23,17 @@ public class TokenController {
 
     @PostMapping("/login")
     // o authentication não está sendo preenchido pela aplicação, siga para a próxima aula
-    public String token(Authentication authentication){
+    public String token(
+            @RequestBody LoginRequest loginRequest
+    ){
         Instant agora = Instant.now();
 
-        String escopo = authentication.getAuthorities()
-                .stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.joining(" "));
-        // busco todas as autoridade/papeis desse usuario,
-        // juntar todas elas em uma unica string separada por espaço
-
-        JwtClaimsSet claims = JwtClaimsSet.builder() //monta o payload do token jwt
-                .issuer("self") //quem criou o token
-                .issuedAt(agora) // momento da publicação do token
-                .expiresAt(agora.plusSeconds(TEMPO_EXPIRACAO)) //momento de expiração, que é agora mais os segundos da variável TEMPO_EXPIRACAO
-                .subject(authentication.getName()) //nome do usuário que está sendo autenticado
-                .claim("escopo", escopo) //campo personalizado que recebe um string que contem todas as autoridades do usuário
+        JwtClaimsSet claims = JwtClaimsSet.builder()
+                .issuer("backend1")
+                .issuedAt(agora)
+                .expiresAt(agora.plusSeconds(TEMPO_EXPIRACAO))
+                .subject(loginRequest.getUsername())
+                .claim("escopo", "admin")
                 .build();
 
         // uso o encoder criado no SecurityConfig para realizar a criação do token JWT
